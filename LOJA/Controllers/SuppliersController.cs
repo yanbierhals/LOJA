@@ -1,4 +1,8 @@
+using LOJA.Interface;
+using LOJA.Models;
+using LOJA.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace LOJA.Controllers
 {
@@ -6,45 +10,68 @@ namespace LOJA.Controllers
     [Route("api/[controller]")]
     public class SuppliersController : ControllerBase
     {
+        private readonly ISuppliersRepository _suppliersRepository;
+
+        public SuppliersController(ISuppliersRepository suppliersRepository)
+        {
+            _suppliersRepository = suppliersRepository;
+        }
+
         [HttpGet]
         public IActionResult GetSuppliers()
         {
-            // Lógica para obter uma lista de fornecedores do banco de dados
-            return Ok("Lista de fornecedores");
+            List<Supplier> suppliers = _suppliersRepository.GetSuppliers();
+            return Ok(suppliers);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetSupplier(int id)
         {
-            // Lógica para obter um fornecedor específico por ID do banco de dados
-            return Ok($"Fornecedor com ID {id}");
+            Supplier supplier = _suppliersRepository.GetSupplier(id);
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+            return Ok(supplier);
         }
 
         [HttpPost]
-        public IActionResult AddSupplier([FromBody] SupplierDTO supplier)
+        public IActionResult AddSupplier([FromBody] Supplier supplier)
         {
-            // Lógica para adicionar um novo fornecedor ao banco de dados
-            return Ok($"Novo fornecedor adicionado: {supplier.Name}");
+            _suppliersRepository.AddSupplier(supplier);
+            return Ok(supplier);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateSupplier(int id, [FromBody] SupplierDTO supplier)
+        public IActionResult UpdateSupplier(int id, [FromBody] Supplier supplier)
         {
-            // Lógica para atualizar um fornecedor existente no banco de dados com base no ID
-            return Ok($"Fornecedor com ID {id} atualizado: {supplier.Name}");
+            Supplier existingSupplier = _suppliersRepository.GetSupplier(id);
+            if (existingSupplier == null)
+            {
+                return NotFound();
+            }
+
+            existingSupplier.Name = supplier.Name;
+            existingSupplier.Email = supplier.Email;
+            existingSupplier.Phone = supplier.Phone;
+            existingSupplier.CNPJ = supplier.CNPJ;
+            existingSupplier.BrandId = supplier.BrandId;
+
+            _suppliersRepository.UpdateSupplier(existingSupplier);
+            return Ok(existingSupplier);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteSupplier(int id)
         {
-            // Lógica para excluir um fornecedor do banco de dados com base no ID
-            return Ok($"Fornecedor com ID {id} excluído");
-        }
-    }
+            Supplier existingSupplier = _suppliersRepository.GetSupplier(id);
+            if (existingSupplier == null)
+            {
+                return NotFound();
+            }
 
-    public class SupplierDTO
-    {
-        public string Name { get; set; }
-        // Outras propriedades do fornecedor
+            _suppliersRepository.DeleteSupplier(existingSupplier);
+            return Ok($"Supplier with ID {id} deleted");
+        }
     }
 }

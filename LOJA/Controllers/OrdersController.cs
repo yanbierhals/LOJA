@@ -1,4 +1,8 @@
+using LOJA.Interface;
+using LOJA.Models;
+using LOJA.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace LOJA.Controllers
 {
@@ -6,45 +10,65 @@ namespace LOJA.Controllers
     [Route("api/[controller]")]
     public class OrdersController : ControllerBase
     {
+        private readonly IOrdersRepository _ordersRepository;
+
+        public OrdersController(IOrdersRepository ordersRepository)
+        {
+            _ordersRepository = ordersRepository;
+        }
+
         [HttpGet]
         public IActionResult GetOrders()
         {
-            // Lógica para obter uma lista de pedidos do banco de dados
-            return Ok("Lista de pedidos");
+            List<Order> orders = _ordersRepository.GetOrders();
+            return Ok(orders);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetOrder(int id)
         {
-            // Lógica para obter um pedido específico por ID do banco de dados
-            return Ok($"Pedido com ID {id}");
+            Order order = _ordersRepository.GetOrder(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+            return Ok(order);
         }
 
         [HttpPost]
-        public IActionResult AddOrder([FromBody] OrderDTO order)
+        public IActionResult AddOrder([FromBody] Order order)
         {
-            // Lógica para adicionar um novo pedido ao banco de dados
-            return Ok($"Novo pedido adicionado: {order.Description}");
+            _ordersRepository.AddOrder(order);
+            return Ok(order);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateOrder(int id, [FromBody] OrderDTO order)
+        public IActionResult UpdateOrder(int id, [FromBody] Order order)
         {
-            // Lógica para atualizar um pedido existente no banco de dados com base no ID
-            return Ok($"Pedido com ID {id} atualizado: {order.Description}");
+            Order existingOrder = _ordersRepository.GetOrder(id);
+            if (existingOrder == null)
+            {
+                return NotFound();
+            }
+
+            existingOrder.TotalDue = order.TotalDue;
+            existingOrder.OrderStatus = order.OrderStatus;
+
+            _ordersRepository.UpdateOrder(existingOrder);
+            return Ok(existingOrder);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteOrder(int id)
         {
-            // Lógica para excluir um pedido do banco de dados com base no ID
-            return Ok($"Pedido com ID {id} excluído");
-        }
-    }
+            Order existingOrder = _ordersRepository.GetOrder(id);
+            if (existingOrder == null)
+            {
+                return NotFound();
+            }
 
-    public class OrderDTO
-    {
-        public string Description { get; set; }
-        // Outras propriedades do pedido
+            _ordersRepository.DeleteOrder(existingOrder);
+            return Ok($"Order with ID {id} deleted");
+        }
     }
 }

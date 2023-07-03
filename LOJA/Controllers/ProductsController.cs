@@ -1,4 +1,8 @@
+using LOJA.Interface;
+using LOJA.Models;
+using LOJA.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace LOJA.Controllers
 {
@@ -6,45 +10,68 @@ namespace LOJA.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
+        private readonly IProductsRepository _productsRepository;
+
+        public ProductsController(IProductsRepository productsRepository)
+        {
+            _productsRepository = productsRepository;
+        }
+
         [HttpGet]
         public IActionResult GetProducts()
         {
-            // Lógica para obter uma lista de produtos do banco de dados
-            return Ok("Lista de produtos");
+            List<Product> products = _productsRepository.GetProducts();
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetProduct(int id)
         {
-            // Lógica para obter um produto específico por ID do banco de dados
-            return Ok($"Produto com ID {id}");
+            Product product = _productsRepository.GetProduct(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return Ok(product);
         }
 
         [HttpPost]
-        public IActionResult AddProduct([FromBody] ProductDTO product)
+        public IActionResult AddProduct([FromBody] Product product)
         {
-            // Lógica para adicionar um novo produto ao banco de dados
-            return Ok($"Novo produto adicionado: {product.Name}");
+            _productsRepository.AddProduct(product);
+            return Ok(product);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateProduct(int id, [FromBody] ProductDTO product)
+        public IActionResult UpdateProduct(int id, [FromBody] Product product)
         {
-            // Lógica para atualizar um produto existente no banco de dados com base no ID
-            return Ok($"Produto com ID {id} atualizado: {product.Name}");
+            Product existingProduct = _productsRepository.GetProduct(id);
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
+
+            existingProduct.Name = product.Name;
+            existingProduct.Unit = product.Unit;
+            existingProduct.Cost = product.Cost;
+            existingProduct.Count = product.Count;
+            existingProduct.SupplierId = product.SupplierId;
+
+            _productsRepository.UpdateProduct(existingProduct);
+            return Ok(existingProduct);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteProduct(int id)
         {
-            // Lógica para excluir um produto do banco de dados com base no ID
-            return Ok($"Produto com ID {id} excluído");
-        }
-    }
+            Product existingProduct = _productsRepository.GetProduct(id);
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
 
-    public class ProductDTO
-    {
-        public string Name { get; set; }
-        // Outras propriedades do produto
+            _productsRepository.DeleteProduct(existingProduct);
+            return Ok($"Product with ID {id} deleted");
+        }
     }
 }

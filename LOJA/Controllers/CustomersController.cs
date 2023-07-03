@@ -1,4 +1,8 @@
+using LOJA.Interface;
+using LOJA.Models;
+using LOJA.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace LOJA.Controllers
 {
@@ -6,38 +10,78 @@ namespace LOJA.Controllers
     [Route("api/[controller]")]
     public class CustomersController : ControllerBase
     {
+        private readonly ICustomersRepository _customersRepository;
+
+        public CustomersController(ICustomersRepository customersRepository)
+        {
+            _customersRepository = customersRepository;
+        }
+
         [HttpGet]
         public IActionResult GetCustomers()
         {
-            // Lógica para obter uma lista de clientes do banco de dados
-            return Ok("Lista de clientes");
+            List<Customer> customers = _customersRepository.GetCustomers();
+            return Ok(customers);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetCustomer(int id)
         {
-            // Lógica para obter um cliente específico por ID do banco de dados
-            return Ok($"Cliente com ID {id}");
+            Customer customer = _customersRepository.GetCustomer(id);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+            return Ok(customer);
         }
 
         [HttpPost]
-        public IActionResult AddCustomer([FromBody] CustomerDTO customer)
+        public IActionResult AddCustomer([FromBody] CustomerDTO customerDTO)
         {
-            // Lógica para adicionar um novo cliente ao banco de dados
+            Customer customer = new Customer
+            {
+                Name = customerDTO.Name,
+                Email = customerDTO.Email,
+                Phone = customerDTO.Phone,
+                CPF = customerDTO.CPF,
+                CNPJ = customerDTO.CNPJ
+            };
+
+            _customersRepository.AddCustomer(customer);
             return Ok($"Novo cliente adicionado: {customer.Name}");
         }
 
+
         [HttpPut("{id}")]
-        public IActionResult UpdateCustomer(int id, [FromBody] CustomerDTO customer)
+        public IActionResult UpdateCustomer(int id, [FromBody] CustomerDTO customerDTO)
         {
-            // Lógica para atualizar um cliente existente no banco de dados com base no ID
-            return Ok($"Cliente com ID {id} atualizado: {customer.Name}");
+            Customer existingCustomer = _customersRepository.GetCustomer(id);
+            if (existingCustomer == null)
+            {
+                return NotFound();
+            }
+
+            existingCustomer.Name = customerDTO.Name;
+            existingCustomer.Email = customerDTO.Email;
+            existingCustomer.Phone = customerDTO.Phone;
+            existingCustomer.CPF = customerDTO.CPF;
+            existingCustomer.CNPJ = customerDTO.CNPJ;
+
+            _customersRepository.UpdateCustomer(existingCustomer);
+            return Ok($"Cliente com ID {id} atualizado: {existingCustomer.Name}");
         }
+
 
         [HttpDelete("{id}")]
         public IActionResult DeleteCustomer(int id)
         {
-            // Lógica para excluir um cliente do banco de dados com base no ID
+            Customer existingCustomer = _customersRepository.GetCustomer(id);
+            if (existingCustomer == null)
+            {
+                return NotFound();
+            }
+
+            _customersRepository.DeleteCustomer(existingCustomer);
             return Ok($"Cliente com ID {id} excluído");
         }
     }
@@ -45,6 +89,9 @@ namespace LOJA.Controllers
     public class CustomerDTO
     {
         public string Name { get; set; }
-        // Outras propriedades do cliente
+        public string Email { get; set; }
+        public string? Phone { get; set; }
+        public string? CPF { get; set; }
+        public string? CNPJ { get; set; }
     }
-}
+} 
