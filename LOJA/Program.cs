@@ -52,15 +52,13 @@ builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Documentation");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Documentation");
+});
+
 
 app.UseHttpsRedirection();
 
