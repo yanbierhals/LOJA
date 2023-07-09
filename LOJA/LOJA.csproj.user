@@ -4,7 +4,7 @@
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <ActiveDebugProfile>IIS Express</ActiveDebugProfile>
+    <ActiveDebugProfile>LOJA</ActiveDebugProfile>
     <NameOfLastUsedPublishProfile>C:\Users\user_999\Documents\GitHub\LOJA\LOJA\Properties\PublishProfiles\api-loja-app - Web Deploy.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>
